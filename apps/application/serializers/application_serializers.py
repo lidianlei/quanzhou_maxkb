@@ -81,13 +81,13 @@ class ModelDatasetAssociation(serializers.Serializer):
         user_id = self.data.get('user_id')
         if model_id is not None and len(model_id) > 0:
             if not QuerySet(Model).filter(id=model_id).exists():
-                raise AppApiException(500, f'{_("Model does not exist")}【{model_id}】')
+                raise AppApiException(500, f'{_("模型不存在")}【{model_id}】')
         dataset_id_list = list(set(self.data.get('dataset_id_list')))
         exist_dataset_id_list = [str(dataset.id) for dataset in
                                  QuerySet(DataSet).filter(id__in=dataset_id_list, user_id=user_id)]
         for dataset_id in dataset_id_list:
             if not exist_dataset_id_list.__contains__(dataset_id):
-                raise AppApiException(500, f'{_("The knowledge base id does not exist")}【{dataset_id}】')
+                raise AppApiException(500, f'{_("知识库 ID 不存在")}【{dataset_id}】')
 
 
 class ApplicationSerializerModel(serializers.ModelSerializer):
@@ -510,9 +510,9 @@ class ApplicationSerializer(serializers.Serializer):
     class Create(serializers.Serializer):
         user_id = serializers.UUIDField(required=True, error_messages=ErrMessage.uuid(_("User ID")))
 
-        @valid_license(model=Application, count=5,
+        @valid_license(model=Application, count=999999999,
                        message=_(
-                           'The community version supports up to 5 applications. If you need more applications, please contact us (https://fit2cloud.com/).'))
+                           '请联系管理员'))
         @transaction.atomic
         def insert(self, application: Dict):
             application_type = application.get('type')
@@ -593,7 +593,7 @@ class ApplicationSerializer(serializers.Serializer):
         def is_valid(self, *, raise_exception=False):
             super().is_valid(raise_exception=True)
             if not QuerySet(Application).filter(id=self.data.get('id')).exists():
-                raise AppApiException(500, _('Application id does not exist'))
+                raise AppApiException(500, _('应用程序 ID 不存在'))
 
         def hit_test(self):
             self.is_valid()
@@ -702,7 +702,7 @@ class ApplicationSerializer(serializers.Serializer):
                 self.is_valid(raise_exception=True)
             application = QuerySet(Application).filter(id=self.data.get('application_id')).first()
             if application is None:
-                raise AppApiException(500, _('Application id does not exist'))
+                raise AppApiException(500, _('应用程序 ID 不存在'))
             image_id = uuid.uuid1()
             image = Image(id=image_id, image=self.data.get('image').read(), image_name=self.data.get('image').name)
             image.save()
@@ -717,9 +717,9 @@ class ApplicationSerializer(serializers.Serializer):
         file = UploadedFileField(required=True, error_messages=ErrMessage.image(_("file")))
         user_id = serializers.UUIDField(required=True, error_messages=ErrMessage.uuid(_("User ID")))
 
-        @valid_license(model=Application, count=5,
+        @valid_license(model=Application, count=999999999,
                        message=_(
-                           'The community version supports up to 5 applications. If you need more applications, please contact us (https://fit2cloud.com/).'))
+                           '请联系管理员'))
         @transaction.atomic
         def import_(self, with_valid=True):
             if with_valid:
@@ -770,8 +770,8 @@ class ApplicationSerializer(serializers.Serializer):
                                stt_model_enable=application.get('stt_model_enable'),
                                tts_type=application.get('tts_type'),
                                clean_time=application.get('clean_time'),
-                               file_upload_enable=application.get('file_upload_enable'),
-                               file_upload_setting=application.get('file_upload_setting'),
+                               file_upload_enable=application.get('file_upload_enable', False),
+                               file_upload_setting=application.get('file_upload_setting', {}),
                                )
 
         @staticmethod

@@ -252,6 +252,8 @@ class ParagraphSerializers(ApiMixin, serializers.Serializer):
                 dataset_id=self.data.get('dataset_id'),
                 problem_id=self.data.get(
                     'problem_id')).first()
+            if not problem_paragraph_mapping:
+                raise AppApiException(404, _('关联不存在，无法解除关联'))
             problem_paragraph_mapping_id = problem_paragraph_mapping.id
             problem_paragraph_mapping.delete()
             delete_embedding_by_source(problem_paragraph_mapping_id)
